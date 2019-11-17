@@ -43,7 +43,7 @@ module FeatureFlipper
 
     def self.get_states(feature_name)
       feature = features[feature_name]
-      feature.keys
+      feature&.keys || []
     end
 
     def self.active_state?(valid_states, feature_name, context = nil)
