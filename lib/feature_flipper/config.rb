@@ -62,13 +62,14 @@ module FeatureFlipper
 
     def self.is_active?(feature_name, context = nil)
       ensure_config_is_loaded
-
+      
       states = get_states(feature_name)
       active_state?(states, feature_name, context)
     end
 
     def self.active_features(context = nil)
-      self.features.collect { |key, value| self.is_active?(key, context) ? key : nil }.compact
+      ensure_config_is_loaded
+      features.keys.collect { |feature_name| is_active?(feature_name, context) ? feature_name : nil }.compact
     end
   end
 
