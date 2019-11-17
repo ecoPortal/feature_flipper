@@ -41,29 +41,30 @@ module FeatureFlipper
       @states = states
     end
 
-    def self.get_state(feature_name)
+    def self.get_states(feature_name)
       feature = features[feature_name]
-      feature ? feature[:state] : nil
+      feature.keys
     end
 
-    def self.active_state?(state, feature_name, context = nil)
-      condition = states[state]
-      if condition.is_a?(Proc)
-        if context
-          context.instance_exec(feature_name, &condition)
+    def self.active_state?(valid_states, feature_name, context = nil)
+      valid_states.any? do |state|
+        if states[state].is_a?(Proc)
+          if context
+            context.instance_exec(feature_name, &states[state])
+          else
+            states[state].call(feature_name) == true
+          end
         else
-          condition.call(feature_name) == true
+          states[state] == true
         end
-      else
-        condition == true
       end
     end
 
     def self.is_active?(feature_name, context = nil)
       ensure_config_is_loaded
 
-      state = get_state(feature_name)
-      active_state?(state, feature_name, context)
+      states = get_states(feature_name)
+      active_state?(states, feature_name, context)
     end
 
     def self.active_features(context = nil)
@@ -77,7 +78,9 @@ module FeatureFlipper
     end
 
     def feature(name, options = {})
-      FeatureFlipper::Config.features[name] = options.merge(:state => @state)
+      FeatureFlipper::Config.features[name] ||= {}
+      FeatureFlipper::Config.features[name][@state] ||= {}
+      FeatureFlipper::Config.features[name][@state] = options
     end
   end
 
